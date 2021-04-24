@@ -163,3 +163,11 @@ func findEmails() {
 		}
 	}
 }
+
+// Find Project DNS names
+func findHostnames() {
+	reg := regexp.MustCompile(`[A-z0-9\.\-%]+\.` + PROJECT_NAME)
+	for _, v := range reg.FindAllString(RESULTS.Pages, -1) {
+		uniq(&RESULTS.HostNames, v)
+	}
+}
