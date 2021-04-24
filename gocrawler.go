@@ -493,3 +493,13 @@ func putting(v *gocui.View, msg string) {
 		return nil
 	})
 }
+
+// push msg to response view
+func pushing(msg string) {
+	fmt.Fprintln(VIEWS_OBJ["RESPONSE"], msg)
+}
+
+// shows the defference of the start time to now
+func sinceTime() float64 {
+	return time.Since(START_TIME).Seconds()
+}
