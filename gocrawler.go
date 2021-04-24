@@ -662,3 +662,11 @@ func toBool(arg interface{}) bool {
 	}
 	return false
 }
+
+// print the slices
+func slicePrint(head string, s []string) {
+	pushing(head)
+	for v := range s {
+		pushing(s[v])
+	}
+}
