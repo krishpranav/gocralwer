@@ -796,3 +796,51 @@ func isOutScope(host string) bool {
 	}
 	return false
 }
+
+// url joiner
+func urjoin(baseurl, uri string) string {
+	urlower := strings.ToLower(uri)
+	baseurl = strings.ReplaceAll(baseurl, `\/\/`, `//`)
+	var pos int
+	for _, v := range []string{" ", "", "/", "#", "http://", "https://"} {
+		if urlower == v {
+			return ""
+		}
+	}
+	// remove the spaces
+	pos = strings.Index(uri, " ")
+	if pos > -1 {
+		uri = uri[:pos]
+	}
+	// remove the user@.. portion
+	pos = strings.Index(uri, "@")
+	if pos > -1 {
+		uri = uri[:pos]
+	}
+	// remove the comments
+	pos = strings.Index(uri, "#")
+	if pos > -1 {
+		uri = uri[:pos]
+	}
+	if !strings.HasSuffix(baseurl, "/") {
+		baseurl = baseurl + "/"
+	}
+	if strings.HasPrefix(uri, "://") {
+		return ""
+	}
+	if strings.HasPrefix(uri, "//") {
+		return baseurl + uri
+	}
+	if strings.HasPrefix(uri, "/") {
+		return baseurl + uri[1:]
+	}
+	base, err := url.Parse(baseurl)
+	if err != nil {
+		return ""
+	}
+	final, err := base.Parse(uri)
+	if err != nil {
+		return ""
+	}
+	return final.String()
+}
