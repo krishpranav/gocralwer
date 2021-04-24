@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"regexp"
+
+	"github.com/jroimartin/gocui"
 )
 
 // meta data
@@ -53,4 +55,11 @@ type Results struct {
 	Comments     map[string]bool
 	HostNames    []string
 	RegMaches    map[string][]string
+}
+
+// program definitions
+type def struct {
+	currentPage      string
+	currentPageIndex int
+	Gui              *gocui.Gui
 }
