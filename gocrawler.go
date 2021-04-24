@@ -962,3 +962,12 @@ func addCDN(uri string) bool {
 	}
 	return false
 }
+
+// func for identify the phone number
+func addPhone(uri string) bool {
+	if strings.HasPrefix(uri, "tel://") {
+		RESULTS.Phones[uri[6:]] = true
+		return true
+	}
+	return false
+}
