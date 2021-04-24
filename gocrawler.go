@@ -623,3 +623,13 @@ func prepareOptions() string {
 	prepareQuery()
 	return ""
 }
+
+// will split the keys as slice and write it as OPTIONS.Keys
+func prepareQuery() {
+	q := trim(VIEWS_OBJ["QUERY"].Buffer())
+	if !strings.HasPrefix(q, "$") {
+		OPTIONS.Keys = strings.Split(q, ",")
+	} else {
+		OPTIONS.Query = q
+	}
+}
