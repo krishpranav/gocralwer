@@ -633,3 +633,32 @@ func prepareQuery() {
 		OPTIONS.Query = q
 	}
 }
+
+// return false if arg is blank and true if it isn't
+// supported types: int, string, bool, []int, []string, []bool
+func toBool(arg interface{}) bool {
+	switch arg.(type) {
+	case int:
+		return arg != 0
+	case string:
+		return arg != ""
+	case bool:
+		return arg == true
+	case rune:
+		return true
+	default:
+		tostr, ok := arg.([]string)
+		if ok {
+			return toBool(len(tostr))
+		}
+		toint, ok := arg.([]int)
+		if ok {
+			return toBool(len(toint))
+		}
+		toflag, ok := arg.([]bool)
+		if ok {
+			return toBool(len(toflag))
+		}
+	}
+	return false
+}
