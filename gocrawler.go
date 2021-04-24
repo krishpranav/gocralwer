@@ -567,3 +567,59 @@ func optionsCode() string {
 		B2S(OPTIONS.Robots), B2S(OPTIONS.Sitemap), B2S(OPTIONS.WayBack), OPTIONS.URLExclude,
 		OPTIONS.StatusCodeExclude, OPTIONS.InScopeExclude, OPTIONS.Proxy, B2S(OPTIONS.IgnoreInvalidSSL))
 }
+
+// will show the option from the option view and set them
+func prepareOptions() string {
+	S2B := func(v string) bool {
+		if v == "true" {
+			return true
+		}
+		return false
+	}
+	code := trim(VIEWS_OBJ["OPTIONS"].Buffer())
+	if !toBool(code) {
+		return "Options are incomplete. Press Ctrl+R to rewrite options."
+	}
+	for k, line := range strings.Split(code, "\n") {
+		split := strings.Split(line, "=")
+		values := strings.Join(split[1:], "=")
+		splited := strings.Split(values, ",")
+		// If count of the variables doesn't match with values
+		if len(splited) != len(strings.Split(split[0], ",")) {
+			return "Options are incomplete: All int and bool options must be set. Press Ctrl+R to rewrite options."
+		}
+		switch k {
+		// Set the int variables
+		case 0:
+			var k int
+			var v *int
+			for k, v = range []*int{&OPTIONS.Thread, &OPTIONS.Depth, &OPTIONS.Delay, &OPTIONS.Timeout, &OPTIONS.MaxRegexResult} {
+				if i, err := strconv.Atoi(splited[k]); err == nil {
+					*v = i
+				} else {
+					return fmt.Sprintf("Invalid value for type int: %s.", splited[k])
+				}
+			}
+		// Set the boolean variables
+		case 1:
+			OPTIONS.Robots, OPTIONS.Sitemap, OPTIONS.WayBack = S2B(splited[0]), S2B(splited[1]), S2B(splited[2])
+		// Set the urlExclude,.. variables
+		case 2:
+			OPTIONS.URLExclude = values
+		case 3:
+			OPTIONS.StatusCodeExclude = values
+		case 4:
+			OPTIONS.InScopeDomains = strings.Split(values, ",")
+		case 5:
+			OPTIONS.Proxy = values
+		case 6:
+			OPTIONS.IgnoreInvalidSSL = S2B(values)
+		}
+	}
+	// Prepare the URLs channel for crawl
+	TOKENS = make(chan struct{}, OPTIONS.Thread)
+	// Init Headers
+	OPTIONS.Headers = trim(VIEWS_OBJ["HEADERS"].Buffer())
+	prepareQuery()
+	return ""
+}
