@@ -1033,3 +1033,23 @@ func responseSaveView() {
 		return nil
 	})
 }
+
+// show the status of output
+func saveResultView(res string) {
+	if len(res) > 65 {
+		res = res[:65] + "..."
+		res = "Error: " + res
+	}
+	PROG.Gui.Update(func(g *gocui.Gui) error {
+		X, Y := g.Size()
+		attrs := VIEWS_ATTRS["SAVE_RESULT"]
+		if v, err := g.SetView("SAVE_RESULT", attrs.x0(X), attrs.y0(Y), attrs.x1(X), attrs.y1(Y)); err != nil {
+			if err != gocui.ErrUnknownView {
+				return err
+			}
+			attrs.text = res
+			setViewAttrs(v, attrs)
+		}
+		return nil
+	})
+}
