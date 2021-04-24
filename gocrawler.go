@@ -20,3 +20,7 @@ import (
 	"github.com/jroimartin/gocui"
 )
 
+// meta data
+var VERSION = "0.1.2"
+var STATUS_LINE_NAME  = fmt.Sprintf("[gocrawler/v%s]", VERSION)
+
