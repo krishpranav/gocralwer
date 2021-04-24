@@ -1053,3 +1053,14 @@ func saveResultView(res string) {
 		return nil
 	})
 }
+
+// will set view attribute
+func setViewAttrs(v *gocui.View, attrs viewAttrs) *gocui.View {
+	v.Title = attrs.title
+	v.Frame = attrs.frame
+	v.Editable = attrs.editable
+	v.Wrap = attrs.wrap
+	v.Editor = attrs.editor
+	fmt.Fprintf(v, attrs.text)
+	return v
+}
