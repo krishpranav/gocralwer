@@ -240,3 +240,40 @@ func request(uri string) (string, int, error) {
 	}
 	return string(Body), resp.StatusCode, er
 }
+
+// func for sanitizing the url and return a list of urls
+func crawlWayBackURLs() []string {
+	// Fetch waybackurls need almost 15s timeout
+	timeout := OPTIONS.Timeout
+	OPTIONS.Timeout = 15
+	text, _, ok := request(fmt.Sprintf("%s://web.archive.org/cdx/search/cdx?url=%s/*&output=json&collapse=urlkey", OPTIONS.Scheme, PROJECT_NAME))
+	OPTIONS.Timeout = timeout
+	if ok != nil {
+		return []string{}
+	}
+	var wrapper [][]string
+	ok = json.Unmarshal([]byte(text), &wrapper)
+	if ok != nil {
+		return []string{}
+	}
+	var wayURLs []string
+	var code int
+	for _, urls := range wrapper[1:] {
+		code, _ = strconv.Atoi(urls[4])
+		// Exclude the urls with codeExclude and urlExclude
+		if statusCodeExcluding(code) && urlExcluding(urls[2]) {
+			parse, ok := url.Parse(urls[2])
+			if ok != nil {
+				continue
+			}
+			parse.Host = regexp.MustCompile(`:[\d]+`).ReplaceAllString(parse.Host, "")
+			marshal, ok := parse.MarshalBinary()
+			if ok != nil {
+				continue
+			}
+			url := fmt.Sprintf("%s", marshal)
+			wayURLs = append(wayURLs, strings.ReplaceAll(url, `\/\/`, `//`))
+		}
+	}
+	return wayURLs
+}
