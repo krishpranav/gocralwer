@@ -1,6 +1,7 @@
 package main
 
 import (
+	"strings"
 	"fmt"
 	"regexp"
 	"sync"
@@ -131,6 +132,25 @@ func findComments() {
 	for _, v := range reg.FindAllString(RESULTS.Pages, -1) {
 		if !RESULTS.Comments[v] {
 			RESULTS.Comments[v] = true
+		}
+	}
+}
+
+
+// func for finding emails
+func findEmails() {
+	reg := regexp.MustCompile(`[A-z0-9.\-_]+@[A-z0-9\-\.]{0,255}?` + PROJECT_NAME + `(?:[A-z]+)?`)
+	founds := reg.FindAllString(RESULTS.Pages, -1)
+	reg = regexp.MustCompile(`[A-z0-9.\-_]+@[A-z0-9\-.]+\.[A-z]{1,10}`)
+	for _, v := range reg.FindAllString(RESULTS.Pages, -1) {
+		if strings.Contains(strings.Split(v, "@")[1], ".") {
+			founds = append(founds, strings.ToLower(v))
+		}
+	}
+	for _, v := range founds {
+		v = strings.ToLower(v)
+		if !RESULTS.Emails[v] && toBool(v) {
+			RESULTS.Emails[v] = true
 		}
 	}
 }
