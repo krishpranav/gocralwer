@@ -1,20 +1,30 @@
 package main
 
 import (
-	"strings"
+	"crypto/tls"
+	"encoding/json"
+	"flag"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/url"
+	"os"
 	"regexp"
+	"runtime"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
+	"github.com/PuerkitoBio/goquery"
 	"github.com/jroimartin/gocui"
 )
 
-// Metadata
+// meta datas
 var VERSION = "0.1.2"
 var STATUS_LINE_NAME = fmt.Sprintf("[evine/v%s]", VERSION)
 
-// Options structure
+// options structure
 type Options struct {
 	Robots            bool
 	Sitemap           bool
@@ -41,7 +51,7 @@ type Options struct {
 	InScopeDomains    []string
 }
 
-// Output result structure
+// output result structure
 type Results struct {
 	Pages        string
 	PageByURL    map[string]string
@@ -60,14 +70,14 @@ type Results struct {
 	RegMaches    map[string][]string
 }
 
-// Program definitions
+// program definitions
 type def struct {
 	currentPage      string
 	currentPageIndex int
 	Gui              *gocui.Gui
 }
 
-// CUI View Attributes
+// CUI view attributes
 type viewAttrs struct {
 	editor   gocui.Editor
 	editable bool
@@ -126,7 +136,7 @@ var (
 	MUTEX       = &sync.Mutex{}
 )
 
-// find comments with regex
+// Find Comments
 func findComments() {
 	reg := regexp.MustCompile(`<!--.*?-->`)
 	for _, v := range reg.FindAllString(RESULTS.Pages, -1) {
@@ -136,8 +146,7 @@ func findComments() {
 	}
 }
 
-
-// func for finding emails
+// Find Emails
 func findEmails() {
 	reg := regexp.MustCompile(`[A-z0-9.\-_]+@[A-z0-9\-\.]{0,255}?` + PROJECT_NAME + `(?:[A-z]+)?`)
 	founds := reg.FindAllString(RESULTS.Pages, -1)
