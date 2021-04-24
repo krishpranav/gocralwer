@@ -299,3 +299,21 @@ func crawlRobots() []string {
 	}
 	return []string{}
 }
+
+// crawling the sitemap.xml 
+func crawlSitemap() []string {
+	text, statusCode, ok := request(fmt.Sprintf("%s://%s/sitemap.xml", OPTIONS.Scheme, PROJECT_NAME))
+	if ok != nil {
+		return []string{}
+	}
+	reg := regexp.MustCompile(`<loc>(.*?)</loc>`)
+	if statusCode == 200 {
+		founds := reg.FindAllStringSubmatch(text, -1)
+		out := []string{}
+		for _, v := range founds {
+			out = append(out, v[1])
+		}
+		return out
+	}
+	return []string{}
+}
