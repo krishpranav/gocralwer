@@ -277,3 +277,25 @@ func crawlWayBackURLs() []string {
 	}
 	return wayURLs
 }
+
+// crawl the robots.txt in the url
+func crawlRobots() []string {
+	text, statusCode, ok := request(fmt.Sprintf("%s://%s/robots.txt", OPTIONS.Scheme, PROJECT_NAME))
+
+	if ok != nil {
+		return []string{}
+	}
+	if statusCode == 200 {
+		var reg *regexp.Regexp
+		makers := []string{}
+		// It finds all of URLs without any restrict
+		for _, obj := range [3]string{`Disallow: (.*)?`, `Allow: (.*)?`, `Sitemap: (.*)?`} {
+			reg = regexp.MustCompile(obj)
+			for _, link := range [][]string(reg.FindAllStringSubmatch(text, -1)) {
+				makers = append(makers, string(link[1]))
+			}
+		}
+		return makers
+	}
+	return []string{}
+}
