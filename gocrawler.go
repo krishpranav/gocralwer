@@ -124,3 +124,13 @@ var (
 	START_TIME  time.Time
 	MUTEX       = &sync.Mutex{}
 )
+
+// find comments with regex
+func findComments() {
+	reg := regexp.MustCompile(`<!--.*?-->`)
+	for _, v := range reg.FindAllString(RESULTS.Pages, -1) {
+		if !RESULTS.Comments[v] {
+			RESULTS.Comments[v] = true
+		}
+	}
+}
