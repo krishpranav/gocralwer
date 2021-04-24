@@ -553,3 +553,17 @@ func parseOptions() {
 		OPTIONS.Headers = `User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101 Firefox/78.0`
 	}
 }
+
+// will show the options to view as text
+func optionsCode() string {
+	B2S := func(b bool) string {
+		if b == true {
+			return "true"
+		}
+		return "false"
+	}
+	return fmt.Sprintf("thread,depth,delay,timeout,maxRegexResult=%d,%d,%d,%d,%d\nrobots,sitemap,wayback=%s,%s,%s\nurlExclude=%s\ncodeExclude=%s\ndomainExclude=%s\nproxy=%s\nIgnoreInvalidSSL=%s",
+		OPTIONS.Thread, OPTIONS.Depth, OPTIONS.Delay, OPTIONS.Timeout, OPTIONS.MaxRegexResult,
+		B2S(OPTIONS.Robots), B2S(OPTIONS.Sitemap), B2S(OPTIONS.WayBack), OPTIONS.URLExclude,
+		OPTIONS.StatusCodeExclude, OPTIONS.InScopeExclude, OPTIONS.Proxy, B2S(OPTIONS.IgnoreInvalidSSL))
+}
