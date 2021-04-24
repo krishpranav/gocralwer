@@ -844,3 +844,31 @@ func urjoin(baseurl, uri string) string {
 	}
 	return final.String()
 }
+
+// remove url scheme and replace it with default scheme and
+// removes last
+func setURLUniq(uri string) string {
+	uri = regexp.MustCompile(`https?://`).ReplaceAllString(uri, OPTIONS.Scheme+"://")
+	// Remove last slash
+	uri = regexp.MustCompile(`/$`).ReplaceAllString(uri, "")
+	return uri
+}
+
+// setting the url scheme
+func urlSanitize(uri string) string {
+	u, err := url.Parse(uri)
+	if err != nil {
+		uri = OPTIONS.Scheme + uri
+		u, err = url.Parse(uri)
+		if err != nil {
+			return ""
+		}
+	}
+	if u.Scheme == "" {
+		uri = strings.Replace(uri, "://", "", -1)
+		uri = fmt.Sprintf("%s://%s", OPTIONS.Scheme, uri)
+
+	}
+	return uri
+}
+
