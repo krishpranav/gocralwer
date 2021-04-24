@@ -202,3 +202,41 @@ func statusCodeExcluding(code int) bool {
 	}
 	return false
 }
+
+// send the request and gives the source, status code, erros
+func request(uri string) (string, int, error) {
+	client := &http.Client{
+		Timeout: time.Duration(OPTIONS.Timeout) * time.Second}
+	Httptransport := &http.Transport{}
+	if OPTIONS.Proxy != "" {
+		proxy, er := url.Parse(OPTIONS.Proxy)
+		if er != nil {
+			return "", 0, er
+		}
+		Httptransport.Proxy = http.ProxyURL(proxy)
+	}
+	if OPTIONS.IgnoreInvalidSSL == true {
+		Httptransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	}
+	client = &http.Client{Transport: Httptransport}
+	req, er := http.NewRequest("GET", trim(uri), nil)
+	if er != nil {
+		return "", 0, er
+	}
+	headers := strings.Split(trim(VIEWS_OBJ["HEADERS"].Buffer()), "\n")
+	for _, v := range headers {
+		kv := strings.Split(v, ": ")
+		kv[0] = strings.Replace(kv[0], " ", "", -1)
+		req.Header.Set(kv[0], kv[1])
+	}
+	resp, er := client.Do(req)
+	if er != nil {
+		return "", 0, er
+	}
+	defer resp.Body.Close()
+	Body, er := ioutil.ReadAll(resp.Body)
+	if er != nil {
+		return "", 0, er
+	}
+	return string(Body), resp.StatusCode, er
+}
