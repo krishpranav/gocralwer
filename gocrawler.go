@@ -872,3 +872,77 @@ func urlSanitize(uri string) string {
 	return uri
 }
 
+// function for identify the type of url
+func urlCategory(urls []string) []string {
+	spool := []string{}
+	var join string
+	var broke int
+	// Sometimes the program is broken with runtime error
+	// Then we use Mutex to lock the loop to solve the problem
+	MUTEX.Lock()
+	defer MUTEX.Unlock()
+	for _, link := range urls {
+		// If the URL is nothing or blank
+		if !toBool(link) {
+			continue
+		}
+		// If the URL is a phone, CDN or email
+		if addCDN(link) || addPhone(link) || addEmail(link) {
+			continue
+		}
+		join = urjoin(BASEURL, link)
+		if !toBool(join) || !strings.Contains(join, "://") || !strings.Contains(join, ".") {
+			continue
+		}
+		// Identify the media files
+		broke = 0
+		for _, ext := range MEDIA_POSTFIX {
+			if x := checkPostfix(ext, join); x {
+				if !RESULTS.Medias[join] {
+					RESULTS.Medias[join] = true
+				}
+				broke = 1
+				break
+			}
+		}
+		if broke == 1 {
+			continue
+		}
+		// If it is a JavaScript file
+		if checkPostfix("js", join) {
+			if !RESULTS.Scripts[join] {
+				RESULTS.Scripts[join] = true
+			}
+			continue
+		}
+		// If it is a CSS file
+		if checkPostfix("css", join) {
+			if !RESULTS.CSS[join] {
+				RESULTS.CSS[join] = true
+			}
+			continue
+		}
+		urparse, err := url.Parse(join)
+		if err != nil {
+			continue
+		}
+		// If the URL is out from scope
+		if isOutScope(urparse.Host) {
+			if !RESULTS.OutScopeURLs[join] {
+				RESULTS.OutScopeURLs[join] = true
+			}
+			continue
+		}
+		// Clean the URL
+		join = setURLUniq(join)
+		if len(urparse.Query()) > 0 {
+			RESULTS.QueryURLs[join] = true
+		}
+		// Add URL to URLs and output URLs
+		if !RESULTS.URLs[join] {
+			RESULTS.URLs[join] = true
+		}
+		uniq(&spool, join)
+	}
+	return spool
+}
