@@ -761,3 +761,21 @@ func parseQuery(query string) ([]string, string) {
 	})
 	return outputResult, ""
 }
+
+// trim the spaces
+func trim(s string) string {
+	return strings.TrimSpace(s)
+}
+
+// if the i is not in the list uniq append i to the slice
+func uniq(list *[]string, i string) {
+	is := true
+	for _, v := range *list {
+		if v == i {
+			is = false
+		}
+	}
+	if is {
+		*list = append(*list, i)
+	}
+}
