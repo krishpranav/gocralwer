@@ -45,7 +45,7 @@ It will displays help for the tool:
 | -proxy string | Proxy by scheme://ip:port | gocrawler -proxy http://1.1.1.1:8080 | 
 | -scheme string | Set the scheme for the requests (default "https") | gocrawler -scheme http | 
 | -timeout int | Seconds to wait before timing out (default 10) | gocrawler -timeout 15 | 
-| -query string | JQuery expression(It could be a file extension(pdf), a key query(url,script,css,..) or a jquery selector($("a[class='hdr']).attr('hdr')"))) | evine -query url,pdf,txt |
+| -query string | JQuery expression(It could be a file extension(pdf), a key query(url,script,css,..) or a jquery selector($("a[class='hdr']).attr('hdr')"))) | gocrawler -query url,pdf,txt |
 | -regex string | Search the Regular Expression on the page contents | gocrawler -regex 'User.+' |
 | -max-regex int | Max result of regex search for regex field (default 1000) | gocrawler -max-regex -1 | 
 | -robots | Scrape robots.txt for URLs and using them as seeds | gocrawler -robots |
