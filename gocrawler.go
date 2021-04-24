@@ -670,3 +670,11 @@ func slicePrint(head string, s []string) {
 		pushing(s[v])
 	}
 }
+
+// print the maps
+func mapPrint(head string, m map[string]bool) {
+	pushing(head)
+	for k := range m {
+		pushing(fmt.Sprintf("    %s", k))
+	}
+}
