@@ -317,3 +317,16 @@ func crawlSitemap() []string {
 	}
 	return []string{}
 }
+
+// find social networks with regex
+func checkPostfix(file string, uri string) bool {
+	file = strings.ToLower(file)
+	uri = strings.ToLower(uri)
+	reg := regexp.MustCompile(`\.` + file + `[^\w]`)
+	reg2 := regexp.MustCompile(`\.` + file + `[^\w]?$`)
+
+	if reg.MatchString(uri) || reg2.MatchString(uri) || strings.HasSuffix(uri, "."+file) {
+		return true
+	}
+	return false
+}
