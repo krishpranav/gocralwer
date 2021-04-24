@@ -688,3 +688,28 @@ func sliceSearch(list *[]string, i string) bool {
 	}
 	return false
 }
+
+// search the regex on the web pages and show the result on the response view
+func regexSearch() {
+	loading()
+	PROG.Gui.Update(func(_ *gocui.Gui) error {
+		vrb := VIEWS_OBJ["RESPONSE"]
+		vrb.Clear()
+		if RESULTS != nil {
+			for k, v := range RESULTS.PageByURL {
+				founds := OPTIONS.Regex.FindAllString(v, OPTIONS.MaxRegexResult)
+				// Print page address and len of results
+				pushing(fmt.Sprintf(" > %s | %d", k, len(founds)))
+				if founds != nil {
+					for _, v := range founds {
+						pushing("     > " + v)
+					}
+				}
+			}
+		}
+		PROG.currentPage = vrb.Buffer()
+		PROG.Gui.DeleteView("LOADER")
+		return nil
+	})
+}
+
