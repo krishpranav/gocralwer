@@ -172,7 +172,7 @@ func findHostnames() {
 	}
 }
 
-// Find social networks
+// Find social media 
 func findNetworks() {
 	netexp := `(instagram\.com\/[A-z_0-9.\-]{1,30})|(facebook\.com\/[A-z_0-9\-]{2,50})|(fb\.com\/[A-z_0-9\-]{2,50})|(twitter\.com\/[A-z_0-9\-.]{2,40})|(github\.com\/[A-z0-9_-]{1,39})|([A-z0-9_-]{1,39}\.github.(io|com))|(telegram\.me/[A-z_0-9]{5,32})(youtube\.com\/user\/[A-z_0-9\-\.]{2,100})|(linkedin\.com\/company\/[A-z_0-9\.\-]{3,50})|(linkedin\.com\/in\/[A-z_0-9\.\-]{3,50})|(\.?(plus\.google\.com/[A-z0-9_\-.+]{3,255}))|([A-z0-9\-]+\.wordpress\.com)|(reddit\.com/user/[A-z0-9_\-]{3,20})|([A-z0-9\-]{3,32}\.tumblr\.com)|([A-z0-9\-]{3,50}\.blogspot\.com)`
 
@@ -183,4 +183,13 @@ func findNetworks() {
 			RESULTS.Networks[i] = true
 		}
 	}
+}
+
+
+// it will true if the url matched with the urlexcldue option
+func urlExcluding(uri string) bool {
+	if OPTIONS.URLExcludeRegex.MatchString(uri) {
+		return true
+	}
+	return false
 }
