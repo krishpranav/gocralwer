@@ -678,3 +678,13 @@ func mapPrint(head string, m map[string]bool) {
 		pushing(fmt.Sprintf("    %s", k))
 	}
 }
+
+// search a key to list and return the true if it is
+func sliceSearch(list *[]string, i string) bool {
+	for _, v := range *list {
+		if v == i {
+			return true
+		}
+	}
+	return false
+}
