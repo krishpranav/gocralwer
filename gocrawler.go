@@ -971,3 +971,65 @@ func addPhone(uri string) bool {
 	}
 	return false
 }
+
+// identify the email from the url
+func addEmail(uri string) bool {
+	if strings.HasPrefix(uri, "mailto:") && strings.Contains(uri, "@") {
+		uri = strings.ToLower(strings.Replace(uri[7:], "//", "", -1))
+		if strings.Contains(uri, "?") {
+			uri = strings.Split(uri, "?")[0]
+		}
+		RESULTS.Emails[uri] = true
+		return true
+	}
+	return false
+}
+
+// Search prompt regex
+func responseSearch() error {
+	vrb := VIEWS_OBJ["RESPONSE"]
+	vrb.Clear()
+	expr := strings.TrimSpace(VIEWS_OBJ["SEARCH_PROMPT"].Buffer())
+	if expr == "" {
+		pushing(PROG.currentPage)
+		vrb.Title = VIEWS_ATTRS["RESPONSE"].title
+		return nil
+	}
+	reg, err := regexp.Compile(expr)
+	if err != nil {
+		pushing(fmt.Sprintf("Invalid Regex: %v", err))
+		return nil
+	}
+	results := reg.FindAllString(PROG.currentPage, OPTIONS.MaxRegexResult)
+	if len(results) < 1 {
+		pushing("No result.")
+	}
+	vrb.Title = fmt.Sprintf("%d results", len(results))
+	for _, v := range results {
+		pushing("> " + v)
+	}
+	return nil
+}
+
+// Show the saving pop-up view
+func responseSaveView() {
+	currentDir, err := os.Getwd()
+	if err != nil {
+		currentDir = ""
+	}
+	currentDir += "/"
+	PROG.Gui.Update(func(g *gocui.Gui) error {
+		X, Y := g.Size()
+		attrs := VIEWS_ATTRS["SAVE"]
+		if v, err := g.SetView("SAVE", attrs.x0(X), attrs.y0(Y), attrs.x1(X), attrs.y1(Y)); err != nil {
+			if err != gocui.ErrUnknownView {
+				return err
+			}
+			attrs.text = currentDir
+			setViewAttrs(v, attrs)
+			v.SetCursor(len(currentDir), 0)
+		}
+		g.SetCurrentView("SAVE")
+		return nil
+	})
+}
