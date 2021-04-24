@@ -6,7 +6,7 @@ A awsome crawler made in go
 ### From GitHub
 ```
 git clone https://github.com/krishpranav/gocralwer
-cd evine
+cd gocrawler
 go build .
 mv gocrawler /usr/local/bin
 gocrawler --help
