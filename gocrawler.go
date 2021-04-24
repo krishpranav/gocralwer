@@ -510,3 +510,15 @@ func refStatusLine(msg string) {
 	putting(VIEWS_OBJ["STATUS_LINE"], STATUS_LINE_NAME+" "+msg)
 }
 
+// show the loading pop up view
+func loading() error {
+	X, Y := PROG.Gui.Size()
+	attrs := VIEWS_ATTRS["LOADER"]
+	if v, err := PROG.Gui.SetView("LOADER", attrs.x0(X), attrs.y0(Y), attrs.x1(X), attrs.y1(Y)); err != nil {
+		if err != gocui.ErrUnknownView {
+			return err
+		}
+		setViewAttrs(v, attrs)
+	}
+	return nil
+}
