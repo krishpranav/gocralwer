@@ -713,3 +713,51 @@ func regexSearch() {
 	})
 }
 
+// give a query and return the result of query
+func parseQuery(query string) ([]string, string) {
+	query = strings.TrimSpace(query)
+	// Extract the expressions
+	syntaxExp := regexp.MustCompile(`^\$\("([^"]+)"\)\.([\w]+)\(("([^"]+)")?\)`).FindAllStringSubmatch(query, 1)
+	outputResult := []string{}
+	// Check the syntax of query
+	if !toBool(len(syntaxExp)) {
+		return outputResult, "Query: Invalid syntax"
+	}
+	query = strings.ReplaceAll(query, syntaxExp[0][0], "")
+	exprs := syntaxExp[0][1:]
+	// Check the method names
+	methods := []string{"html", "text", "attr"}
+	method := exprs[1]
+	if !sliceSearch(&methods, method) {
+		return outputResult, "Query: Invalid method name"
+	}
+	// Read the document to parse
+	doc, err := goquery.NewDocumentFromReader(strings.NewReader(RESULTS.Pages))
+	if err != nil {
+		return outputResult, fmt.Sprintf("%s", err)
+	}
+	var def func(*goquery.Selection) (string, error)
+	switch method {
+	case "text":
+		def = func(obj *goquery.Selection) (string, error) {
+			return obj.Text(), nil
+		}
+	case "html":
+		def = func(obj *goquery.Selection) (string, error) {
+			return obj.Html()
+		}
+	case "attr":
+		def = func(obj *goquery.Selection) (string, error) {
+			attr, _ := obj.Attr(exprs[3])
+			return attr, nil
+		}
+	}
+	// Run the query
+	doc.Find(exprs[0]).Each(func(i int, obj *goquery.Selection) {
+		rsp, err := def(obj)
+		if err == nil {
+			outputResult = append(outputResult, rsp)
+		}
+	})
+	return outputResult, ""
+}
