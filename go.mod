@@ -3,7 +3,7 @@ module github.com/krishpranav/gocrawler
 go 1.14
 
 require (
-	github.com/PuerkitoBio/goquery v1.6.1 // indirect
+	github.com/PuerkitoBio/goquery v1.6.1
 	github.com/andybalholm/cascadia v1.2.0 // indirect
 	github.com/jroimartin/gocui v0.4.0
 	github.com/mattn/go-runewidth v0.0.12 // indirect
