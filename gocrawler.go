@@ -522,3 +522,34 @@ func loading() error {
 	}
 	return nil
 }
+
+// function for parses the command line flags provided by a user
+func parseOptions() {
+	flag.StringVar(&OPTIONS.URL, "url", "", "URL to crawl for")
+	flag.IntVar(&OPTIONS.Thread, "thread", 5, "The number of concurrent goroutines for resolving")
+	flag.IntVar(&OPTIONS.Delay, "delay", 0, "Sleep between each request(Millisecond)")
+	flag.IntVar(&OPTIONS.Timeout, "timeout", 10, "Seconds to wait before timing out")
+	flag.IntVar(&OPTIONS.MaxRegexResult, "max-regex", 1000, "Max result of regex search for regex field")
+	flag.BoolVar(&OPTIONS.Robots, "robots", false, "Scrape robots.txt for URLs and using them as seeds")
+	flag.BoolVar(&OPTIONS.Sitemap, "sitemap", false, "Scrape sitemap.xml for URLs and using them as seeds")
+	flag.BoolVar(&OPTIONS.WayBack, "wayback", false, "Scrape WayBackURLs(web.archive.org) for URLs and using them as seeds")
+	flag.BoolVar(&OPTIONS.IgnoreInvalidSSL, "Ignore-SSL", false, "Ignore invalid SSL")
+	flag.StringVar(&OPTIONS.Query, "query", "", `Query expression(It could be a file extension(pdf), a key query(url,script,css,..) or a jquery selector($("a[class='hdr']).attr('hdr')")))`)
+	flag.StringVar(&OPTIONS.Proxy, "proxy", "", "Proxy by scheme://ip:port")
+	flag.StringVar(&OPTIONS.Headers, "header", "", "HTTP Header for each request(It should to separated fields by \\n). e.g KEY: VALUE\\nKEY1: VALUE1")
+	flag.StringVar(&OPTIONS.RegexString, "regex", "", "Search the Regular Expression on the pages")
+	flag.StringVar(&OPTIONS.Scheme, "scheme", "https", "Set the scheme for the requests")
+	flag.IntVar(&OPTIONS.Depth, "depth", 1, "Scraper depth search level")
+	flag.StringVar(&OPTIONS.URLExclude, "url-exclude", ".*", "Exclude URLs matching with this regex")
+	flag.StringVar(&OPTIONS.StatusCodeExclude, "code-exclude", ".*", "Exclude HTTP status code with these codes. Separate whit '|'")
+	flag.StringVar(&OPTIONS.InScopeExclude, "domain-exclude", "", "Exclude in-scope domains to crawl. Separate with comma | default=root domain")
+	flag.Parse()
+	if OPTIONS.URL != "" {
+		OPTIONS.URL = urlSanitize(OPTIONS.URL)
+	} else {
+		OPTIONS.URL = "https://"
+	}
+	if !toBool(OPTIONS.Headers) {
+		OPTIONS.Headers = `User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:78.0) Gecko/20100101 Firefox/78.0`
+	}
+}
