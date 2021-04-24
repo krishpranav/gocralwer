@@ -503,3 +503,10 @@ func pushing(msg string) {
 func sinceTime() float64 {
 	return time.Since(START_TIME).Seconds()
 }
+
+// refresh the status line with new value
+func refStatusLine(msg string) {
+	VIEWS_OBJ["STATUS_LINE"].Clear()
+	putting(VIEWS_OBJ["STATUS_LINE"], STATUS_LINE_NAME+" "+msg)
+}
+
