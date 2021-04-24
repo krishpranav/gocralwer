@@ -193,3 +193,12 @@ func urlExcluding(uri string) bool {
 	}
 	return false
 }
+
+// func for status code exclude option
+func statusCodeExcluding(code int) bool {
+	reg := regexp.MustCompile(OPTIONS.StatusCodeExclude)
+	if reg.MatchString(strconv.Itoa(code)) {
+		return true
+	}
+	return false
+}
