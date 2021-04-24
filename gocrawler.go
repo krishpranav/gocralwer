@@ -136,7 +136,7 @@ var (
 	MUTEX       = &sync.Mutex{}
 )
 
-// Find Comments
+// Find comments
 func findComments() {
 	reg := regexp.MustCompile(`<!--.*?-->`)
 	for _, v := range reg.FindAllString(RESULTS.Pages, -1) {
@@ -146,7 +146,7 @@ func findComments() {
 	}
 }
 
-// Find Emails
+// Find emails
 func findEmails() {
 	reg := regexp.MustCompile(`[A-z0-9.\-_]+@[A-z0-9\-\.]{0,255}?` + PROJECT_NAME + `(?:[A-z]+)?`)
 	founds := reg.FindAllString(RESULTS.Pages, -1)
@@ -164,10 +164,23 @@ func findEmails() {
 	}
 }
 
-// Find Project DNS names
+// find project DNS names
 func findHostnames() {
 	reg := regexp.MustCompile(`[A-z0-9\.\-%]+\.` + PROJECT_NAME)
 	for _, v := range reg.FindAllString(RESULTS.Pages, -1) {
 		uniq(&RESULTS.HostNames, v)
+	}
+}
+
+// Find social networks
+func findNetworks() {
+	netexp := `(instagram\.com\/[A-z_0-9.\-]{1,30})|(facebook\.com\/[A-z_0-9\-]{2,50})|(fb\.com\/[A-z_0-9\-]{2,50})|(twitter\.com\/[A-z_0-9\-.]{2,40})|(github\.com\/[A-z0-9_-]{1,39})|([A-z0-9_-]{1,39}\.github.(io|com))|(telegram\.me/[A-z_0-9]{5,32})(youtube\.com\/user\/[A-z_0-9\-\.]{2,100})|(linkedin\.com\/company\/[A-z_0-9\.\-]{3,50})|(linkedin\.com\/in\/[A-z_0-9\.\-]{3,50})|(\.?(plus\.google\.com/[A-z0-9_\-.+]{3,255}))|([A-z0-9\-]+\.wordpress\.com)|(reddit\.com/user/[A-z0-9_\-]{3,20})|([A-z0-9\-]{3,32}\.tumblr\.com)|([A-z0-9\-]{3,50}\.blogspot\.com)`
+
+	reg := regexp.MustCompile(netexp)
+	found := reg.FindAllString(RESULTS.Pages, -1)
+	for _, i := range found {
+		if !RESULTS.Networks[i] {
+			RESULTS.Networks[i] = true
+		}
 	}
 }
