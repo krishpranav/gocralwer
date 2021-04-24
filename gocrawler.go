@@ -946,3 +946,19 @@ func urlCategory(urls []string) []string {
 	}
 	return spool
 }
+
+// fucntion for clean the comments from the page source
+func removeComments(text string) string {
+	reg := regexp.MustCompile(`<!--([\s\S]*?)-->`)
+	text = reg.ReplaceAllString(text, ``)
+	return text
+}
+
+// identify the content delivery networks
+func addCDN(uri string) bool {
+	if strings.HasPrefix(uri, "//") && strings.Contains(uri, ".") && len(strings.Split(uri, ".")) >= 2 {
+		RESULTS.CDNs[uri] = true
+		return true
+	}
+	return false
+}
