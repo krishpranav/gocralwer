@@ -1362,3 +1362,188 @@ func crawl(uri string) []string {
 	DEPTH += 1
 	return list
 }
+
+// Run the crawler
+func crawlIO() error {
+	respObj := VIEWS_OBJ["RESPONSE"]
+	// Clear the Response values
+	respObj.Clear()
+	if err := prepareOptions(); err != "" {
+		fmt.Fprintf(respObj, err)
+		return nil
+	}
+	// Start the time
+	START_TIME = time.Now()
+	// Show loading pop-up
+	loading()
+	// Prepare the Results
+	RESULTS = &Results{"", map[string]string{}, map[string]bool{},
+		map[string]bool{}, map[string]bool{}, map[string]bool{},
+		map[string]bool{}, map[string]bool{}, map[string]bool{},
+		map[string]bool{}, map[string]bool{}, map[string]bool{},
+		map[string]bool{}, []string{}, map[string][]string{}}
+	go func() error {
+		defer PROG.Gui.Update(func(g *gocui.Gui) error {
+			g.DeleteView("LOADER")
+			// Refresh the status line. the status line shows the elapsed time as second and obtained URLs
+			fmt.Fprintln(VIEWS_OBJ["STATUS_LINE"],
+				fmt.Sprintf("%s [Elapsed:%fs] | [Obtained:%d] | [Status:Done]",
+					STATUS_LINE_NAME, sinceTime(), len(RESULTS.URLs)))
+			return nil
+		})
+		urparse, err := url.Parse(trim(VIEWS_OBJ["URL"].Buffer()))
+		if err != nil {
+			pushing(fmt.Sprintf("Invalid URL: %v", err))
+			return nil
+		}
+		// Checking urlExclude option
+		OPTIONS.URLExcludeRegex, err = regexp.Compile(OPTIONS.URLExclude)
+		if err != nil {
+			pushing(fmt.Sprintf("Invalid url_exclude regex: %v", err))
+			return nil
+		}
+		// Checking codeExclude option
+		OPTIONS.StatusCodeRegex, err = regexp.Compile(OPTIONS.StatusCodeExclude)
+		if err != nil {
+			pushing(fmt.Sprintf("Invalid code_exclude regex: %v", err))
+			return nil
+		}
+		PROJECT_NAME = strings.Replace(urparse.Host, "www.", "", -1)
+		OPTIONS.Scheme = urparse.Scheme
+		OPTIONS.InScopeDomains = append(OPTIONS.InScopeDomains, PROJECT_NAME)
+		BASEURL = urlSanitize(PROJECT_NAME)
+		worklist := make(chan []string)
+		var n int // number of pending sends to worklist
+		// Start with the URL argument.
+		n++
+		seen := make(map[string]bool)
+		seen[urparse.String()] = true
+
+		seeds, err := getSource(urparse.String())
+		if err != nil {
+			pushing(fmt.Sprintf("Request: %v", err))
+			return nil
+		}
+		anseeds := []string{}
+		if OPTIONS.Robots {
+			anseeds = crawlRobots()
+		}
+		if OPTIONS.Sitemap {
+			anseeds = append(anseeds, crawlSitemap()...)
+		}
+		if OPTIONS.WayBack {
+			anseeds = append(anseeds, crawlWayBackURLs()...)
+		}
+		if OPTIONS.Depth > 1 {
+			seeds = append(seeds, urlCategory(anseeds)...)
+		} else {
+			urlCategory(anseeds)
+			PROG.currentPage = respObj.Buffer()
+			return nil
+		}
+		PROG.Gui.Update(func(g *gocui.Gui) error {
+			g.DeleteView("LOADER")
+			return nil
+		})
+		go func() { worklist <- seeds }()
+		// Crawl the web concurrently
+		for ; n > 0; n-- {
+			list := <-worklist
+			for _, link := range list {
+				link = setURLUniq(urjoin(BASEURL, link))
+				if !seen[link] {
+					seen[link] = true
+					n++
+					go func(link string) {
+						worklist <- crawl(link)
+					}(link)
+				}
+			}
+		}
+		return nil
+	}()
+	PROG.currentPage = respObj.Buffer()
+	return nil
+}
+
+/* outcomeIO gives the Keys from Keys Field and
+shows the results.
+keys could be pre-define(ALL_KEYS) options or a
+file extension like docx. */
+func outcomeIO() {
+	vrb := VIEWS_OBJ["RESPONSE"]
+	vrb.Clear()
+	loading()
+	vrb.SetOrigin(0, 0)
+
+	PROG.Gui.Update(func(_ *gocui.Gui) error {
+		defer PROG.Gui.DeleteView("LOADER")
+		// If it is a JQuery syntax
+		if strings.HasPrefix(OPTIONS.Query, "$") {
+			resp, err := parseQuery(OPTIONS.Query)
+			if err != "" {
+				pushing(err)
+				return nil
+			}
+			slicePrint(fmt.Sprintf("[*] %s | %d", OPTIONS.Query, len(resp)), resp)
+		} else {
+
+			var ext2 bool
+			for _, q := range OPTIONS.Keys {
+				ext2 = q == "all"
+
+				if q == "email" || ext2 {
+					findEmails()
+					mapPrint(fmt.Sprintf("[*] Emails | %d", len(RESULTS.Emails)), RESULTS.Emails)
+				}
+				if q == "comment" || ext2 {
+					findComments()
+					mapPrint(fmt.Sprintf("[*] Comments | %d", len(RESULTS.Comments)), RESULTS.Comments)
+				}
+				if q == "url" || ext2 {
+					mapPrint(fmt.Sprintf("[*] In Scope URLs | %d", len(RESULTS.URLs)), RESULTS.URLs)
+				}
+				if q == "all_urls" || ext2 {
+					mapPrint(fmt.Sprintf("[*] Out Scope URLs | %d", len(RESULTS.OutScopeURLs)), RESULTS.OutScopeURLs)
+				}
+				if q == "cdn" || ext2 {
+					mapPrint(fmt.Sprintf("[*] CDNs | %d", len(RESULTS.CDNs)), RESULTS.CDNs)
+				}
+				if q == "script" || ext2 {
+					mapPrint(fmt.Sprintf("[*] Scripts | %d", len(RESULTS.Scripts)), RESULTS.Scripts)
+				}
+				if q == "css" || ext2 {
+					mapPrint(fmt.Sprintf("[*] CSS | %d", len(RESULTS.CSS)), RESULTS.CSS)
+				}
+				if q == "media" || ext2 {
+					mapPrint(fmt.Sprintf("[*] Media | %d", len(RESULTS.Medias)), RESULTS.Medias)
+				}
+				if q == "dns" || ext2 {
+					findHostnames()
+					slicePrint(fmt.Sprintf("[*] HostNames | %d", len(RESULTS.HostNames)), RESULTS.HostNames)
+				}
+				if q == "network" || ext2 {
+					findNetworks()
+					mapPrint(fmt.Sprintf("[*] Social Networks | %d", len(RESULTS.Networks)), RESULTS.Networks)
+				}
+				if q == "query_urls" || ext2 {
+					mapPrint(fmt.Sprintf("[*] Get URLs | %d", len(RESULTS.QueryURLs)), RESULTS.QueryURLs)
+				}
+				if q == "phones" || ext2 {
+					mapPrint(fmt.Sprintf("[*] Phones | %d", len(RESULTS.Phones)), RESULTS.Phones)
+				}
+				if !sliceSearch(&ALL_KEYS, q) {
+					var medias []string
+					for k := range RESULTS.Medias {
+						if checkPostfix(q, k) {
+							medias = append(medias, k)
+						}
+					}
+					slicePrint(fmt.Sprintf("[*] '%s' | %d", q, len(medias)), medias)
+				}
+			}
+		}
+		PROG.currentPage = vrb.Buffer()
+		return nil
+	})
+}
