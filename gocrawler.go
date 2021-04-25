@@ -1064,3 +1064,40 @@ func setViewAttrs(v *gocui.View, attrs viewAttrs) *gocui.View {
 	fmt.Fprintf(v, attrs.text)
 	return v
 }
+
+// layouts
+func layout(g *gocui.Gui) error {
+	X, Y := g.Size()
+	// If the X and Y is less than minimum(MIN_X,MIN_Y) then it shows the ERROR VIEW
+	if X < MIN_X || Y < MIN_Y {
+		attrs := VIEWS_ATTRS["ERROR"]
+		if v, err := g.SetView("ERROR", attrs.x0(X), attrs.y0(Y), attrs.x1(X), attrs.y1(Y)); err != nil {
+			if err != gocui.ErrUnknownView {
+				return err
+			}
+			if _, err := g.SetCurrentView("ERROR"); err != nil {
+				return err
+			}
+			setViewAttrs(v, attrs)
+		}
+		return nil
+	}
+	g.DeleteView("ERROR")
+	for _, viewName := range ALL_VIEWS {
+		attrs := VIEWS_ATTRS[viewName]
+		if v, err := g.SetView(viewName, attrs.x0(X), attrs.y0(Y), attrs.x1(X), attrs.y1(Y)); err != nil {
+			if err != gocui.ErrUnknownView {
+				return err
+			}
+			if viewName == "URL" {
+				if _, err := g.SetCurrentView("URL"); err != nil {
+					return err
+				}
+				v.SetCursor(8, 0)
+			}
+			setViewAttrs(v, attrs)
+			VIEWS_OBJ[viewName] = v
+		}
+	}
+	return nil
+}
