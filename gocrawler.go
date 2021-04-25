@@ -1301,3 +1301,10 @@ func (e singleLineEditor) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.
 	}
 	e.editor.Edit(v, key, ch, mod)
 }
+
+// the single line editor removes multi lines capabilites
+func (e responseEditor) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier) {
+	if key == gocui.KeyArrowUp || key == gocui.KeyArrowDown {
+		e.editor.Edit(v, key, ch, mod)
+	}
+}
