@@ -1101,3 +1101,144 @@ func layout(g *gocui.Gui) error {
 	}
 	return nil
 }
+
+func initKeybindings(g *gocui.Gui) error {
+	// To exit from the program: Ctrl+Z
+	if err := g.SetKeybinding("", gocui.KeyCtrlZ, gocui.ModNone,
+		func(g *gocui.Gui, v *gocui.View) error {
+			return gocui.ErrQuit
+		}); err != nil {
+		return err
+	}
+
+	// To save the Response value: Ctrl+S
+	if err := g.SetKeybinding("", gocui.KeyCtrlS, gocui.ModNone,
+		func(g *gocui.Gui, v *gocui.View) error {
+			// Show the save view
+			responseSaveView()
+
+			// Save the result with Enter key
+			if err := g.SetKeybinding("SAVE", gocui.KeyEnter, gocui.ModNone,
+				func(g *gocui.Gui, v *gocui.View) error {
+					results := VIEWS_OBJ["RESPONSE"].BufferLines()
+					g.DeleteView("SAVE_RESULT")
+					if err := output(results, strings.TrimSpace(v.Buffer())); err != nil {
+						saveResultView(fmt.Sprintf("%s", err))
+					} else {
+						saveResultView("Response saved successfully.")
+					}
+					return nil
+				}); err != nil {
+				return err
+			}
+
+			// Ctrl+Q to close the save pop-up view
+			if err := g.SetKeybinding("SAVE", gocui.KeyCtrlQ, gocui.ModNone,
+				func(g *gocui.Gui, v *gocui.View) error {
+					g.DeleteView("SAVE")
+					g.DeleteView("SAVE_RESULT")
+					g.SetCurrentView(VIEWS[PROG.currentPageIndex])
+					g.Cursor = true
+					return nil
+				}); err != nil {
+				return err
+			}
+			return nil
+		}); err != nil {
+		return err
+	}
+
+	// To go to the next view: Tab
+	if err := g.SetKeybinding("", gocui.KeyTab, gocui.ModNone,
+		func(g *gocui.Gui, v *gocui.View) error {
+			PROG.currentPageIndex = (PROG.currentPageIndex + 1) % len(VIEWS)
+			g.SetCurrentView(VIEWS[PROG.currentPageIndex])
+			return nil
+		}); err != nil {
+		return err
+	}
+
+	// to run the crawler in each view: Ctrl+Space
+	if err := g.SetKeybinding("", gocui.KeyCtrlSpace, gocui.ModNone,
+		func(g *gocui.Gui, v *gocui.View) error {
+			crawlIO()
+			return nil
+		}); err != nil {
+		return err
+	}
+
+	// to select the Search Prompt view: Ctrl+F
+	if err := g.SetKeybinding("", gocui.KeyCtrlF, gocui.ModNone,
+		func(g *gocui.Gui, v *gocui.View) error {
+			g.SetCurrentView("SEARCH_PROMPT")
+			return nil
+		}); err != nil {
+		return err
+	}
+
+	// to run the crawler in the URL view: Enter
+	if err := g.SetKeybinding("URL", gocui.KeyEnter, gocui.ModNone,
+		func(g *gocui.Gui, v *gocui.View) error {
+			crawlIO()
+			return nil
+		}); err != nil {
+		return err
+	}
+
+	// to rewrite the default options from the optionsCode: Ctrl+R
+	if err := g.SetKeybinding("OPTIONS", gocui.KeyCtrlR, gocui.ModNone,
+		func(g *gocui.Gui, v *gocui.View) error {
+			vrb := VIEWS_OBJ["OPTIONS"]
+			vrb.Clear()
+			fmt.Fprintln(vrb, optionsCode())
+			return nil
+		}); err != nil {
+		return err
+	}
+
+	// to rewrite the default headers: Ctrl+R
+	if err := g.SetKeybinding("HEADERS", gocui.KeyCtrlR, gocui.ModNone,
+		func(g *gocui.Gui, v *gocui.View) error {
+			vrb := VIEWS_OBJ["HEADERS"]
+			vrb.Clear()
+			fmt.Fprintln(vrb, OPTIONS.Headers)
+			return nil
+		}); err != nil {
+		return err
+	}
+
+	// to search the entered keys and shows the results: Enter
+	if err := g.SetKeybinding("QUERY", gocui.KeyEnter, gocui.ModNone,
+		func(_ *gocui.Gui, v *gocui.View) error {
+			if RESULTS == nil {
+				return nil
+			}
+			prepareQuery()
+			outcomeIO()
+			return nil
+		}); err != nil {
+		return err
+	}
+
+	/// to search the entered regex in the web pages: Enter
+	if err := g.SetKeybinding("REGEX", gocui.KeyEnter, gocui.ModNone,
+		func(_ *gocui.Gui, v *gocui.View) error {
+			prepareOptions()
+			regex := strings.TrimSpace(v.Buffer())
+			vrb := VIEWS_OBJ["RESPONSE"]
+			PROG.currentPage = vrb.Buffer()
+			vrb.Clear()
+			// check regex
+			reg, err := regexp.Compile(regex)
+			if err != nil {
+				fmt.Fprintf(vrb, fmt.Sprintf("Invalid Regex: %v", err))
+				return nil
+			}
+			OPTIONS.Regex = reg
+			regexSearch()
+			return nil
+		}); err != nil {
+		return err
+	}
+	return nil
+}
