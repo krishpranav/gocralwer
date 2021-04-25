@@ -1308,3 +1308,20 @@ func (e responseEditor) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Mo
 		e.editor.Edit(v, key, ch, mod)
 	}
 }
+
+// func for find all href | src attribute values as url
+func getURLs(text string) []string {
+	text = removeComments(text)
+	sanitizeTags := regexp.MustCompile(`<|>|/>`)
+	reg := regexp.MustCompile(`(href|src)\s*?=\s*['"](/?.*?)['"]|['"](http.*?)['"]`)
+	find := reg.FindAllString(text, -1)
+	links := []string{}
+	repPrefix := regexp.MustCompile(`(href|src)\s*?=\s*`)
+	for _, v := range find {
+		if v != "" && !sanitizeTags.MatchString(v) {
+			v = repPrefix.ReplaceAllString(v, ``)
+			links = append(links, strings.ReplaceAll(strings.ReplaceAll(v, "'", ""), "\"", ""))
+		}
+	}
+	return links
+}
