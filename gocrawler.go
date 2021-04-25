@@ -1255,3 +1255,12 @@ func output(data []string, path string) error {
 	}
 	return nil
 }
+
+// func for search prompt editor
+func (e searchEditor) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier) {
+	e.editor.Edit(v, key, ch, mod)
+	PROG.Gui.Update(func(g *gocui.Gui) error {
+		responseSearch()
+		return nil
+	})
+}
