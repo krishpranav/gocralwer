@@ -22,7 +22,7 @@ import (
 
 // Metadata
 var VERSION = "0.1.2"
-var STATUS_LINE_NAME = fmt.Sprintf("[evine/v%s]", VERSION)
+var STATUS_LINE_NAME = fmt.Sprintf("[gocrawler/v%s]", VERSION)
 
 // Options structure
 type Options struct {
