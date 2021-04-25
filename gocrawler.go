@@ -20,11 +20,11 @@ import (
 	"github.com/jroimartin/gocui"
 )
 
-// meta datas
+// Metadata
 var VERSION = "0.1.2"
 var STATUS_LINE_NAME = fmt.Sprintf("[evine/v%s]", VERSION)
 
-// options structure
+// Options structure
 type Options struct {
 	Robots            bool
 	Sitemap           bool
@@ -51,7 +51,7 @@ type Options struct {
 	InScopeDomains    []string
 }
 
-// output result structure
+// Output result structure
 type Results struct {
 	Pages        string
 	PageByURL    map[string]string
@@ -70,14 +70,14 @@ type Results struct {
 	RegMaches    map[string][]string
 }
 
-// program definitions
+// Program definitions
 type def struct {
 	currentPage      string
 	currentPageIndex int
 	Gui              *gocui.Gui
 }
 
-// CUI view attributes
+// CUI View Attributes
 type viewAttrs struct {
 	editor   gocui.Editor
 	editable bool
@@ -136,7 +136,7 @@ var (
 	MUTEX       = &sync.Mutex{}
 )
 
-// Find comments
+// Find comments with regex
 func findComments() {
 	reg := regexp.MustCompile(`<!--.*?-->`)
 	for _, v := range reg.FindAllString(RESULTS.Pages, -1) {
@@ -146,7 +146,7 @@ func findComments() {
 	}
 }
 
-// Find emails
+// Find emails with regex
 func findEmails() {
 	reg := regexp.MustCompile(`[A-z0-9.\-_]+@[A-z0-9\-\.]{0,255}?` + PROJECT_NAME + `(?:[A-z]+)?`)
 	founds := reg.FindAllString(RESULTS.Pages, -1)
@@ -164,7 +164,7 @@ func findEmails() {
 	}
 }
 
-// find project DNS names
+// Find project DNS names with regex
 func findHostnames() {
 	reg := regexp.MustCompile(`[A-z0-9\.\-%]+\.` + PROJECT_NAME)
 	for _, v := range reg.FindAllString(RESULTS.Pages, -1) {
@@ -172,7 +172,7 @@ func findHostnames() {
 	}
 }
 
-// Find social media 
+// Find social networks with regex
 func findNetworks() {
 	netexp := `(instagram\.com\/[A-z_0-9.\-]{1,30})|(facebook\.com\/[A-z_0-9\-]{2,50})|(fb\.com\/[A-z_0-9\-]{2,50})|(twitter\.com\/[A-z_0-9\-.]{2,40})|(github\.com\/[A-z0-9_-]{1,39})|([A-z0-9_-]{1,39}\.github.(io|com))|(telegram\.me/[A-z_0-9]{5,32})(youtube\.com\/user\/[A-z_0-9\-\.]{2,100})|(linkedin\.com\/company\/[A-z_0-9\.\-]{3,50})|(linkedin\.com\/in\/[A-z_0-9\.\-]{3,50})|(\.?(plus\.google\.com/[A-z0-9_\-.+]{3,255}))|([A-z0-9\-]+\.wordpress\.com)|(reddit\.com/user/[A-z0-9_\-]{3,20})|([A-z0-9\-]{3,32}\.tumblr\.com)|([A-z0-9\-]{3,50}\.blogspot\.com)`
 
@@ -185,8 +185,7 @@ func findNetworks() {
 	}
 }
 
-
-// it will true if the url matched with the urlexcldue option
+// Return true if the URL matched with the urlExclude option
 func urlExcluding(uri string) bool {
 	if OPTIONS.URLExcludeRegex.MatchString(uri) {
 		return true
@@ -194,7 +193,7 @@ func urlExcluding(uri string) bool {
 	return false
 }
 
-// func for status code exclude option
+// Return true if the status code matched with the codeExclude option
 func statusCodeExcluding(code int) bool {
 	reg := regexp.MustCompile(OPTIONS.StatusCodeExclude)
 	if reg.MatchString(strconv.Itoa(code)) {
@@ -203,7 +202,7 @@ func statusCodeExcluding(code int) bool {
 	return false
 }
 
-// send the request and gives the source, status code, erros
+// Send the request and gives the source, status code and errors
 func request(uri string) (string, int, error) {
 	client := &http.Client{
 		Timeout: time.Duration(OPTIONS.Timeout) * time.Second}
@@ -241,7 +240,8 @@ func request(uri string) (string, int, error) {
 	return string(Body), resp.StatusCode, er
 }
 
-// func for sanitizing the url and return a list of urls
+// Find the archive pages from the web.archive.org and sanitize
+// the URLs and return a list of URLs
 func crawlWayBackURLs() []string {
 	// Fetch waybackurls need almost 15s timeout
 	timeout := OPTIONS.Timeout
@@ -278,7 +278,7 @@ func crawlWayBackURLs() []string {
 	return wayURLs
 }
 
-// crawl the robots.txt in the url
+// Crawling the robots.txt URLs as seed
 func crawlRobots() []string {
 	text, statusCode, ok := request(fmt.Sprintf("%s://%s/robots.txt", OPTIONS.Scheme, PROJECT_NAME))
 
@@ -300,7 +300,7 @@ func crawlRobots() []string {
 	return []string{}
 }
 
-// crawling the sitemap.xml 
+// Crawling the sitemap.xml URLs as seed
 func crawlSitemap() []string {
 	text, statusCode, ok := request(fmt.Sprintf("%s://%s/sitemap.xml", OPTIONS.Scheme, PROJECT_NAME))
 	if ok != nil {
@@ -318,7 +318,7 @@ func crawlSitemap() []string {
 	return []string{}
 }
 
-// find social networks with regex
+// Find social networks with regex
 func checkPostfix(file string, uri string) bool {
 	file = strings.ToLower(file)
 	uri = strings.ToLower(uri)
@@ -331,7 +331,7 @@ func checkPostfix(file string, uri string) bool {
 	return false
 }
 
-// set view properties
+// Set view properties
 func settingViews() {
 	VIEWS_ATTRS = map[string]viewAttrs{
 		"URL": {
@@ -486,7 +486,7 @@ func settingViews() {
 	}
 }
 
-// put the msg to the response view
+// Put the msg to the Response View concurrently
 func putting(v *gocui.View, msg string) {
 	PROG.Gui.Update(func(_ *gocui.Gui) error {
 		fmt.Fprintln(v, msg)
@@ -494,23 +494,23 @@ func putting(v *gocui.View, msg string) {
 	})
 }
 
-// push msg to response view
+// Push msg to the Response View
 func pushing(msg string) {
 	fmt.Fprintln(VIEWS_OBJ["RESPONSE"], msg)
 }
 
-// shows the defference of the start time to now
+// Return the difference of the start time to now
 func sinceTime() float64 {
 	return time.Since(START_TIME).Seconds()
 }
 
-// refresh the status line with new value
+// Refresh the status line with new value
 func refStatusLine(msg string) {
 	VIEWS_OBJ["STATUS_LINE"].Clear()
 	putting(VIEWS_OBJ["STATUS_LINE"], STATUS_LINE_NAME+" "+msg)
 }
 
-// show the loading pop up view
+// Show the loading pop-up view
 func loading() error {
 	X, Y := PROG.Gui.Size()
 	attrs := VIEWS_ATTRS["LOADER"]
@@ -523,7 +523,7 @@ func loading() error {
 	return nil
 }
 
-// function for parses the command line flags provided by a user
+// parseOptions parses the command line flags provided by a user
 func parseOptions() {
 	flag.StringVar(&OPTIONS.URL, "url", "", "URL to crawl for")
 	flag.IntVar(&OPTIONS.Thread, "thread", 5, "The number of concurrent goroutines for resolving")
@@ -554,7 +554,7 @@ func parseOptions() {
 	}
 }
 
-// will show the options to view as text
+// Return the options to the option view as text
 func optionsCode() string {
 	B2S := func(b bool) string {
 		if b == true {
@@ -568,7 +568,7 @@ func optionsCode() string {
 		OPTIONS.StatusCodeExclude, OPTIONS.InScopeExclude, OPTIONS.Proxy, B2S(OPTIONS.IgnoreInvalidSSL))
 }
 
-// will show the option from the option view and set them
+// Read the options from the option View and set them
 func prepareOptions() string {
 	S2B := func(v string) bool {
 		if v == "true" {
@@ -624,7 +624,7 @@ func prepareOptions() string {
 	return ""
 }
 
-// will split the keys as slice and write it as OPTIONS.Keys
+// Split the keys as slice and write to the OPTIONS.Keys
 func prepareQuery() {
 	q := trim(VIEWS_OBJ["QUERY"].Buffer())
 	if !strings.HasPrefix(q, "$") {
@@ -634,8 +634,8 @@ func prepareQuery() {
 	}
 }
 
-// return false if arg is blank and true if it isn't
-// supported types: int, string, bool, []int, []string, []bool
+// Return the false if the arg is blank and true if it isn't.
+// Supported types: int, string, bool, []int, []string, []bool
 func toBool(arg interface{}) bool {
 	switch arg.(type) {
 	case int:
@@ -663,7 +663,7 @@ func toBool(arg interface{}) bool {
 	return false
 }
 
-// print the slices
+// Print the slices
 func slicePrint(head string, s []string) {
 	pushing(head)
 	for v := range s {
@@ -671,7 +671,7 @@ func slicePrint(head string, s []string) {
 	}
 }
 
-// print the maps
+// Print the maps
 func mapPrint(head string, m map[string]bool) {
 	pushing(head)
 	for k := range m {
@@ -679,7 +679,7 @@ func mapPrint(head string, m map[string]bool) {
 	}
 }
 
-// search a key to list and return the true if it is
+// Search a key to the list and return the true if it is
 func sliceSearch(list *[]string, i string) bool {
 	for _, v := range *list {
 		if v == i {
@@ -689,7 +689,7 @@ func sliceSearch(list *[]string, i string) bool {
 	return false
 }
 
-// search the regex on the web pages and show the result on the response view
+// Search the regex on the web pages and show the result on the Response view
 func regexSearch() {
 	loading()
 	PROG.Gui.Update(func(_ *gocui.Gui) error {
@@ -713,7 +713,7 @@ func regexSearch() {
 	})
 }
 
-// give a query and return the result of query
+// Gives a query($("a").attr("href")) and return the result of query
 func parseQuery(query string) ([]string, string) {
 	query = strings.TrimSpace(query)
 	// Extract the expressions
@@ -762,12 +762,12 @@ func parseQuery(query string) ([]string, string) {
 	return outputResult, ""
 }
 
-// trim the spaces
+// Trim the spaces
 func trim(s string) string {
 	return strings.TrimSpace(s)
 }
 
-// if the i is not in the list uniq append i to the slice
+// If the i is not in the list uniq append i to the slice
 func uniq(list *[]string, i string) {
 	is := true
 	for _, v := range *list {
@@ -780,7 +780,7 @@ func uniq(list *[]string, i string) {
 	}
 }
 
-// identify the out scope urls
+// Identify the Out Scope URLs
 func isOutScope(host string) bool {
 	host = strings.ToLower(host)
 	host = strings.Replace(host, "www.", ".", 1)
@@ -797,7 +797,7 @@ func isOutScope(host string) bool {
 	return false
 }
 
-// url joiner
+// A URL joiner
 func urjoin(baseurl, uri string) string {
 	urlower := strings.ToLower(uri)
 	baseurl = strings.ReplaceAll(baseurl, `\/\/`, `//`)
@@ -845,19 +845,21 @@ func urjoin(baseurl, uri string) string {
 	return final.String()
 }
 
-// remove url scheme and replace it with default scheme and
-// removes last
+// Remove URL scheme and replace it with default scheme and
+// removes last slash
 func setURLUniq(uri string) string {
+	// Set Scheme
 	uri = regexp.MustCompile(`https?://`).ReplaceAllString(uri, OPTIONS.Scheme+"://")
 	// Remove last slash
 	uri = regexp.MustCompile(`/$`).ReplaceAllString(uri, "")
 	return uri
 }
 
-// setting the url scheme
+// Setting the URL Scheme
 func urlSanitize(uri string) string {
 	u, err := url.Parse(uri)
 	if err != nil {
+		// ://name.tld/
 		uri = OPTIONS.Scheme + uri
 		u, err = url.Parse(uri)
 		if err != nil {
@@ -866,13 +868,13 @@ func urlSanitize(uri string) string {
 	}
 	if u.Scheme == "" {
 		uri = strings.Replace(uri, "://", "", -1)
-		uri = fmt.Sprintf("%s://%s", OPTIONS.Scheme, uri)
-
+		uri = fmt.Sprintf("%s://%s", OPTIONS.Scheme, uri) // Default scheme
 	}
 	return uri
 }
 
-// function for identify the type of url
+/* Identify the type of URL and sanitize the URLs.
+Then it returns the URLs that can be scrape. */
 func urlCategory(urls []string) []string {
 	spool := []string{}
 	var join string
@@ -947,14 +949,14 @@ func urlCategory(urls []string) []string {
 	return spool
 }
 
-// fucntion for clean the comments from the page source
+// Clean the comments from the page source
 func removeComments(text string) string {
 	reg := regexp.MustCompile(`<!--([\s\S]*?)-->`)
 	text = reg.ReplaceAllString(text, ``)
 	return text
 }
 
-// identify the content delivery networks
+// Identify the Content Delivery Networks
 func addCDN(uri string) bool {
 	if strings.HasPrefix(uri, "//") && strings.Contains(uri, ".") && len(strings.Split(uri, ".")) >= 2 {
 		RESULTS.CDNs[uri] = true
@@ -963,7 +965,7 @@ func addCDN(uri string) bool {
 	return false
 }
 
-// func for identify the phone number
+// Identify the Phone numbers
 func addPhone(uri string) bool {
 	if strings.HasPrefix(uri, "tel://") {
 		RESULTS.Phones[uri[6:]] = true
@@ -972,7 +974,7 @@ func addPhone(uri string) bool {
 	return false
 }
 
-// identify the email from the url
+// Identify the Email from the URL
 func addEmail(uri string) bool {
 	if strings.HasPrefix(uri, "mailto:") && strings.Contains(uri, "@") {
 		uri = strings.ToLower(strings.Replace(uri[7:], "//", "", -1))
@@ -1034,7 +1036,7 @@ func responseSaveView() {
 	})
 }
 
-// show the status of output
+// Show the status of output
 func saveResultView(res string) {
 	if len(res) > 65 {
 		res = res[:65] + "..."
@@ -1054,7 +1056,7 @@ func saveResultView(res string) {
 	})
 }
 
-// will set view attribute
+// Setting View Attributes
 func setViewAttrs(v *gocui.View, attrs viewAttrs) *gocui.View {
 	v.Title = attrs.title
 	v.Frame = attrs.frame
@@ -1065,7 +1067,7 @@ func setViewAttrs(v *gocui.View, attrs viewAttrs) *gocui.View {
 	return v
 }
 
-// layouts
+// Building Views
 func layout(g *gocui.Gui) error {
 	X, Y := g.Size()
 	// If the X and Y is less than minimum(MIN_X,MIN_Y) then it shows the ERROR VIEW
@@ -1102,6 +1104,7 @@ func layout(g *gocui.Gui) error {
 	return nil
 }
 
+// Define Keyboard Events
 func initKeybindings(g *gocui.Gui) error {
 	// To exit from the program: Ctrl+Z
 	if err := g.SetKeybinding("", gocui.KeyCtrlZ, gocui.ModNone,
@@ -1158,7 +1161,7 @@ func initKeybindings(g *gocui.Gui) error {
 		return err
 	}
 
-	// to run the crawler in each view: Ctrl+Space
+	// To run the crawler in each view: Ctrl+Space
 	if err := g.SetKeybinding("", gocui.KeyCtrlSpace, gocui.ModNone,
 		func(g *gocui.Gui, v *gocui.View) error {
 			crawlIO()
@@ -1167,7 +1170,7 @@ func initKeybindings(g *gocui.Gui) error {
 		return err
 	}
 
-	// to select the Search Prompt view: Ctrl+F
+	// To select the Search Prompt view: Ctrl+F
 	if err := g.SetKeybinding("", gocui.KeyCtrlF, gocui.ModNone,
 		func(g *gocui.Gui, v *gocui.View) error {
 			g.SetCurrentView("SEARCH_PROMPT")
@@ -1176,7 +1179,7 @@ func initKeybindings(g *gocui.Gui) error {
 		return err
 	}
 
-	// to run the crawler in the URL view: Enter
+	// To run the crawler in the URL view: Enter
 	if err := g.SetKeybinding("URL", gocui.KeyEnter, gocui.ModNone,
 		func(g *gocui.Gui, v *gocui.View) error {
 			crawlIO()
@@ -1185,7 +1188,7 @@ func initKeybindings(g *gocui.Gui) error {
 		return err
 	}
 
-	// to rewrite the default options from the optionsCode: Ctrl+R
+	// To rewrite the default options from the optionsCode: Ctrl+R
 	if err := g.SetKeybinding("OPTIONS", gocui.KeyCtrlR, gocui.ModNone,
 		func(g *gocui.Gui, v *gocui.View) error {
 			vrb := VIEWS_OBJ["OPTIONS"]
@@ -1196,7 +1199,7 @@ func initKeybindings(g *gocui.Gui) error {
 		return err
 	}
 
-	// to rewrite the default headers: Ctrl+R
+	// To rewrite the default headers: Ctrl+R
 	if err := g.SetKeybinding("HEADERS", gocui.KeyCtrlR, gocui.ModNone,
 		func(g *gocui.Gui, v *gocui.View) error {
 			vrb := VIEWS_OBJ["HEADERS"]
@@ -1207,7 +1210,7 @@ func initKeybindings(g *gocui.Gui) error {
 		return err
 	}
 
-	// to search the entered keys and shows the results: Enter
+	// To search the entered keys and shows the results: Enter
 	if err := g.SetKeybinding("QUERY", gocui.KeyEnter, gocui.ModNone,
 		func(_ *gocui.Gui, v *gocui.View) error {
 			if RESULTS == nil {
@@ -1220,7 +1223,7 @@ func initKeybindings(g *gocui.Gui) error {
 		return err
 	}
 
-	/// to search the entered regex in the web pages: Enter
+	// To search the entered regex in the web pages: Enter
 	if err := g.SetKeybinding("REGEX", gocui.KeyEnter, gocui.ModNone,
 		func(_ *gocui.Gui, v *gocui.View) error {
 			prepareOptions()
@@ -1228,7 +1231,7 @@ func initKeybindings(g *gocui.Gui) error {
 			vrb := VIEWS_OBJ["RESPONSE"]
 			PROG.currentPage = vrb.Buffer()
 			vrb.Clear()
-			// check regex
+			// Checking regex
 			reg, err := regexp.Compile(regex)
 			if err != nil {
 				fmt.Fprintf(vrb, fmt.Sprintf("Invalid Regex: %v", err))
@@ -1243,7 +1246,7 @@ func initKeybindings(g *gocui.Gui) error {
 	return nil
 }
 
-// save the slice of data in the path
+// Save the slice of data in the path
 func output(data []string, path string) error {
 	fopen, err := os.Create(path)
 	defer fopen.Close()
@@ -1256,7 +1259,7 @@ func output(data []string, path string) error {
 	return nil
 }
 
-// func for search prompt editor
+// Search prompt editor. It search the regex by event of keys
 func (e searchEditor) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier) {
 	e.editor.Edit(v, key, ch, mod)
 	PROG.Gui.Update(func(g *gocui.Gui) error {
@@ -1302,14 +1305,14 @@ func (e singleLineEditor) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.
 	e.editor.Edit(v, key, ch, mod)
 }
 
-// the single line editor removes multi lines capabilites
+// The singleLineEditor removes multi lines capabilities
 func (e responseEditor) Edit(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier) {
 	if key == gocui.KeyArrowUp || key == gocui.KeyArrowDown {
 		e.editor.Edit(v, key, ch, mod)
 	}
 }
 
-// func for find all href | src attribute values as url
+// Find all of href|src attribute values as URL. It's not limited just a[href]
 func getURLs(text string) []string {
 	text = removeComments(text)
 	sanitizeTags := regexp.MustCompile(`<|>|/>`)
@@ -1546,4 +1549,40 @@ func outcomeIO() {
 		PROG.currentPage = vrb.Buffer()
 		return nil
 	})
+}
+
+//main function
+func main() {
+	parseOptions()
+	var g *gocui.Gui
+	var err error
+	// Create a new GUI
+	for _, outputMode := range []gocui.OutputMode{gocui.Output256, gocui.OutputNormal} {
+		g, err = gocui.NewGui(outputMode)
+		if err == nil {
+			break
+		}
+	}
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer g.Close()
+	g.Cursor = true
+	VIEWS_OBJ = map[string]*gocui.View{}
+	g.SetManagerFunc(layout)
+	// Initialize kayboard Events
+	if err := initKeybindings(g); err != nil {
+		fmt.Println(err)
+	}
+	// If the OS is windows. it use the Ascii chars
+	if runtime.GOOS == "windows" {
+		g.ASCII = true
+	}
+	PROG = def{"", 0, g}
+	// Build the Views
+	settingViews()
+	// Run the Main Loop
+	if err := g.MainLoop(); err != nil && err != gocui.ErrQuit {
+		fmt.Println(err)
+	}
 }
