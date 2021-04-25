@@ -1325,3 +1325,40 @@ func getURLs(text string) []string {
 	}
 	return links
 }
+
+// getSource run with each URL and extract links from the URL page
+func getSource(uri string) ([]string, error) {
+	if !urlExcluding(uri) {
+		return []string{}, nil
+	}
+	time.Sleep(time.Duration(OPTIONS.Delay) * time.Millisecond)
+	text, statusCode, er := request(uri)
+	if er != nil {
+		return []string{}, er
+	}
+	if !statusCodeExcluding(statusCode) {
+		return []string{}, nil
+	}
+	putting(VIEWS_OBJ["RESPONSE"], " > "+uri)
+	RESULTS.Pages += text
+	RESULTS.PageByURL[uri] = text
+	allURLs := getURLs(text)
+	allURLs = urlCategory(allURLs)
+	refStatusLine(fmt.Sprintf("[Elapsed:%fs] | [Obtained:%d] | [%s]", sinceTime(), len(RESULTS.URLs), uri))
+	return allURLs, nil
+}
+
+// Crawling process for each seed
+func crawl(uri string) []string {
+	TOKENS <- struct{}{}
+	list, err := getSource(uri)
+	if err != nil {
+		return []string{}
+	}
+	<-TOKENS
+	if DEPTH == OPTIONS.Depth {
+		return []string{}
+	}
+	DEPTH += 1
+	return list
+}
