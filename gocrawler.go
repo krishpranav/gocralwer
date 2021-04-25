@@ -1242,3 +1242,16 @@ func initKeybindings(g *gocui.Gui) error {
 	}
 	return nil
 }
+
+// save the slice of data in the path
+func output(data []string, path string) error {
+	fopen, err := os.Create(path)
+	defer fopen.Close()
+	if err != nil {
+		return err
+	}
+	for _, v := range data {
+		fopen.WriteString(v + "\n")
+	}
+	return nil
+}
